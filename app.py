@@ -1,17 +1,15 @@
 import streamlit as st
 import speech_recognition as sr
 
-# Fungsi untuk mengunggah dan mendeteksi audio
+# Fungsi untuk mendeteksi teks dari file audio
 def detect_audio(file):
     recognizer = sr.Recognizer()
-    audio_file = sr.AudioFile(file)
-
-    with audio_file as source:
-        audio_data = recognizer.record(source)
-
+    
     try:
-        text = recognizer.recognize_google(audio_data)
-        return text
+        with sr.AudioFile(file) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+            return text
     except sr.UnknownValueError:
         return "Suara tidak dikenali"
     except sr.RequestError:
@@ -22,7 +20,7 @@ def main():
     st.title("Aplikasi Pengenalan Suara")
 
     # Upload file audio dari pengguna
-    uploaded_file = st.file_uploader("Unggah file audio", type=['wav', 'mp3'])
+    uploaded_file = st.file_uploader("Unggah file audio", type=['wav'])
 
     if uploaded_file is not None:
         st.audio(uploaded_file, format='audio/wav')
