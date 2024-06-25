@@ -1,32 +1,43 @@
 import streamlit as st
-import speech_recognition as sr
+from google.cloud import speech_v1p1beta1 as speech
 
+# Fungsi untuk mengenali teks dari audio menggunakan Google Cloud Speech-to-Text
+def recognize_audio(audio_file):
+    client = speech.SpeechClient()
+
+    # Konfigurasi untuk pemrosesan audio
+    config = {
+        "encoding": speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        "sample_rate_hertz": 44100,
+        "language_code": "en-US",
+    }
+
+    # Baca file audio sebagai binary
+    content = audio_file.read()
+
+    # Request ke Google Cloud Speech-to-Text
+    audio = {"content": content}
+    response = client.recognize(config=config, audio=audio)
+
+    # Ambil hasil teks dari response
+    results = [result.alternatives[0].transcript for result in response.results]
+    return results
+
+# Main function untuk aplikasi Streamlit
 def main():
-    st.title("Pengenalan Suara menggunakan SpeechRecognition")
+    st.title("Aplikasi Pengenalan Suara dengan Google Cloud")
 
-    # Membuat objek recognizer
-    recognizer = sr.Recognizer()
+    # Upload file audio dari pengguna
+    uploaded_file = st.file_uploader("Unggah file audio", type=['wav'])
 
-    # Mendefinisikan fungsi untuk menangkap suara
-    def capture_audio():
-        with sr.Microphone() as source:
-            st.write("Silakan mulai berbicara...")
-            audio_data = recognizer.listen(source)
+    if uploaded_file is not None:
+        st.audio(uploaded_file, format='audio/wav')
 
-        return audio_data
+        # Deteksi audio menggunakan Google Cloud Speech-to-Text
+        if st.button('Deteksi Suara'):
+            results = recognize_audio(uploaded_file)
+            st.write('Hasil Deteksi:', results)
 
-    # Menampilkan tombol untuk memulai pengenalan suara
-    if st.button("Mulai Pengenalan Suara"):
-        audio_data = capture_audio()
-
-        try:
-            text = recognizer.recognize_google(audio_data, language="id-ID")
-            st.write("Hasil Pengenalan Suara:")
-            st.write(text)
-        except sr.UnknownValueError:
-            st.write("Maaf, tidak dapat mengenali suara Anda.")
-        except sr.RequestError as e:
-            st.write(f"Error pada request: {e}")
-
-if __name__ == "__main__":
+# Panggil main function untuk menjalankan aplikasi
+if __name__ == '__main__':
     main()
