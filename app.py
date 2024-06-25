@@ -1,32 +1,37 @@
 import streamlit as st
 import speech_recognition as sr
 
-def main():
-    st.title("Pengenalan Suara menggunakan SpeechRecognition")
-
-    # Membuat objek recognizer
+# Fungsi untuk mengunggah dan mendeteksi audio
+def detect_audio(file):
     recognizer = sr.Recognizer()
+    audio_file = sr.AudioFile(file)
 
-    # Mendefinisikan fungsi untuk menangkap suara
-    def capture_audio():
-        with sr.Microphone() as source:
-            st.write("Silakan mulai berbicara...")
-            audio_data = recognizer.listen(source)
+    with audio_file as source:
+        audio_data = recognizer.record(source)
 
-        return audio_data
+    try:
+        text = recognizer.recognize_google(audio_data)
+        return text
+    except sr.UnknownValueError:
+        return "Suara tidak dikenali"
+    except sr.RequestError:
+        return "Tidak dapat mengakses layanan pengenalan suara"
 
-    # Menampilkan tombol untuk memulai pengenalan suara
-    if st.button("Mulai Pengenalan Suara"):
-        audio_data = capture_audio()
+# Main function untuk aplikasi Streamlit
+def main():
+    st.title("Aplikasi Pengenalan Suara")
 
-        try:
-            text = recognizer.recognize_google(audio_data, language="id-ID")
-            st.write("Hasil Pengenalan Suara:")
-            st.write(text)
-        except sr.UnknownValueError:
-            st.write("Maaf, tidak dapat mengenali suara Anda.")
-        except sr.RequestError as e:
-            st.write(f"Error pada request: {e}")
+    # Upload file audio dari pengguna
+    uploaded_file = st.file_uploader("Unggah file audio", type=['wav', 'mp3'])
 
-if __name__ == "__main__":
+    if uploaded_file is not None:
+        st.audio(uploaded_file, format='audio/wav')
+
+        # Deteksi audio
+        if st.button('Deteksi Suara'):
+            result = detect_audio(uploaded_file)
+            st.write('Hasil Deteksi:', result)
+
+# Panggil main function untuk menjalankan aplikasi
+if __name__ == '__main__':
     main()
